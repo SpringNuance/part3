@@ -45,8 +45,6 @@ const App = () => {
     })
   }, [])
 
-  console.log('render', persons.length, 'notes')
-
   const PersonsToShow = !filter ? persons : persons.filter(person => person.name.toLowerCase().includes(filter))
 
 
@@ -58,18 +56,23 @@ const App = () => {
       const newPerson = { ...personInList, number: newNumber }
       const id = personInList.id
       if (window.confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)) {
-        personService.update(id, newPerson).then(personRequest => {
+          personService.update(id, newPerson).then(personRequest => {
           console.log(`${newName}'s phone number successfully updated`)
           const newPersons = persons.map(person => person.id !== id ? person : personRequest)
           setPersons(newPersons)
           setMessage(`${newName} was successfully updated`)
           setTimeout(() => {setMessage(null)}, 4000)
         }).catch(error => {
-          setPersons(persons.filter(person => person.id !== id))
-          setNewName('')
-          setNewNumber('')
-          setMessage(`Information of ${personInList.name} has already been deleted from server!`)
-          setTimeout(() => {setMessage(null)}, 4000)
+          console.log(error.response.data)
+          if (error.response.data.error.startsWith("Validation")) {
+            setMessage(`${error.response.data.error}!`)
+            setTimeout(() => {setMessage(null)}, 4000)
+          } else if (error.response.data.error.startsWith("malformatted")) {
+            setPersons(persons.filter(person => person.id !== id))
+            setMessage(`Information of ${personInList.name} has already been deleted from server!`)
+            setTimeout(() => {setMessage(null)}, 4000)
+          }
+          
         })
       }
     } else {
@@ -77,7 +80,7 @@ const App = () => {
         name: newName,
         number: newNumber,
       }
-      personService.create(personObject)
+        personService.create(personObject)
         .then(returnedPerson => {
         setPersons(persons.concat(returnedPerson))
         setNewName('')
@@ -88,8 +91,10 @@ const App = () => {
         setMessage(`${error.response.data.error}!`)
         setTimeout(() => {setMessage(null)}, 4000)
       })
-    }
+    
+      
   }
+}
 
   const deletePerson = (id) => {
     const deletedPerson = persons.filter(person => person.id === id)

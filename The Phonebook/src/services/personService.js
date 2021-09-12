@@ -22,13 +22,8 @@ const remove = id => {
   return request.then(response => response.data)
 }
 
-
-
 const exportedObject = {
-  getAll,
-  create,
-  update,
-  remove,
+  getAll, create, update, remove,
 };
 
 export default exportedObject;
